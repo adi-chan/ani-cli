@@ -1,6 +1,6 @@
-#!/bin/sh
+//#!/bin/sh
 
-version_number="4.11.0"
+version_number="4.10.6"
 
 # UI
 
@@ -84,12 +84,6 @@ help_info() {
         Exit the player, and return the player exit code (useful for non interactive scenarios, mpv only)
       --skip-title <title>
         Use given title as ani-skip query
-      --add <anime>
-        Add anime to watchlist
-      --list
-        Show watchlist and select to play
-      --remove
-        Remove anime from watchlist
       -N, --nextep-countdown
         Display a countdown to the next episode
       -U, --update
@@ -419,9 +413,6 @@ hist_dir="${ANI_CLI_HIST_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ani-cli}"
 histfile="$hist_dir/ani-hsts"
 [ ! -f "$histfile" ] && : >"$histfile"
 search="${ANI_CLI_DEFAULT_SOURCE:-scrape}"
-watchlist="${ANI_CLI_WATCHLIST:-$HOME/.config/ani-cli/watchlist.txt}"
-[ ! -d "$(dirname "$watchlist")" ] && mkdir -p "$(dirname "$watchlist")"
-[ ! -f "$watchlist" ] && : >"$watchlist"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -490,41 +481,6 @@ while [ $# -gt 0 ]; do
             ;;
         -N | --nextep-countdown) search=nextep ;;
         -U | --update) update_script ;;
-
-        --list)
-            [ ! -s "$watchlist" ] && die "watchlist empty!"
-
-            anime_name=$(fzf --prompt="Watchlist: " < "$watchlist")
-            [ -z "$anime_name" ] && exit 0
-
-            query=$(printf "%s" "$anime_name" | sed "s| |+|g")
-            ;;
-
-        --add)
-            shift
-            anime_name="$*"
-            [ -z "$anime_name" ] && die "missing anime name!"
-
-            if grep -Fxiq "$anime_name" "$watchlist"; then
-                echo "Already in watchlist: $anime_name"
-            else
-                echo "$anime_name" >> "$watchlist"
-                echo "Added: $anime_name"
-            fi
-            exit 0
-            ;;
-
-        --remove)
-            [ ! -s "$watchlist" ] && die "watchlist empty!"
-
-            anime_name=$(fzf --prompt="Remove anime: " < "$watchlist")
-            [ -z "$anime_name" ] && exit 0
-
-            grep -Fxv "$anime_name" "$watchlist" > "$watchlist.tmp" && mv "$watchlist.tmp" "$watchlist"
-            echo "Removed: $anime_name"
-            exit 0
-            ;;
-
         *) query="$(printf "%s" "$query $1" | sed "s|^ ||;s| |+|g")" ;;
     esac
     shift
